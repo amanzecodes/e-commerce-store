@@ -12,6 +12,29 @@ export const getAllProducts = async (req, res) => {
   }
 };
 
+export const getProductsByIds = async (req, res) => {
+  try {
+    // Extract product IDs from the request body
+    const { productIds } = req.body;
+
+    if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {
+      return res.status(400).json({ message: "Invalid or missing product IDs" });
+    }
+
+    // Fetch products with the given IDs
+    const products = await Product.find({ _id: { $in: productIds } });
+
+    if (products.length === 0) {
+      return res.status(404).json({ message: "No products found for the given IDs" });
+    }
+
+    res.json({ products });
+  } catch (error) {
+    console.log("Error in getProductsByIds controller", error.message);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 export const getFeaturedProducts = async (req, res) => {
   try {
     let featuredProducts = await redis.get("featured_products");
