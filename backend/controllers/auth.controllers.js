@@ -49,7 +49,7 @@
           message: "User already exists",
         });
       }
-      const user = await User.create({ name, email, password, role });
+      const user = await User.create({ email, password, name, role });
 
       // authenticate
       const { accessToken, refreshToken } = generateTokens(user._id);
@@ -154,4 +154,4 @@
 
 
 
-  // export const getProfile = async (req, res) => {}
+  

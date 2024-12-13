@@ -9,9 +9,9 @@ import couponRoutes from "./routes/coupon.route.js";
 import paymentRoutes from "./routes/payment.route.js";
 import analyticsRoute from "./routes/analytics.route.js";
 import { connectDB } from "./lib/db.js";
-
-dotenv.config();
 const app = express();
+dotenv.config();
+
 
 const PORT = process.env.PORT || 5000;
 
@@ -22,8 +22,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/coupons", couponRoutes);
-app.use("/api/payment ", paymentRoutes);
-app.use("/api/analytics ", analyticsRoute);
+app.use("/api/payment", paymentRoutes);
+app.use("/api/analytics", analyticsRoute);
 
 app.listen(PORT, () => {
   console.log("Server is running on http://localhost:" + PORT);
