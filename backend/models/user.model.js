@@ -30,6 +30,12 @@ const  userSchema = new mongoose.Schema({
             }
         }
     ],
+    //I added this to store analytics data so we can track them from here
+        analyticsData: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Analytics',
+            default: null
+        },
     role: {
         type: String,
         enum: ['customer','admin'],
