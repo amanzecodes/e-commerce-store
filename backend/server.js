@@ -8,7 +8,8 @@ import cartRoutes from "./routes/cart.route.js";
 import couponRoutes from "./routes/coupon.route.js";
 import paymentRoutes from "./routes/payment.route.js";
 import analyticsRoute from "./routes/analytics.route.js";
-import settingsRoute from "./routes/settings.route.js"
+import settingsRoute from "./routes/settings.route.js";
+import reviewsRoute from "./routes/reviews.route.js";
 import { connectDB } from "./lib/db.js";
 const app = express();
 dotenv.config();
@@ -26,6 +27,7 @@ app.use("/api/coupons", couponRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/analytics", analyticsRoute);
 app.use("/api/settings", settingsRoute)
+app.use('/api/reviews', reviewsRoute)
 
 app.listen(PORT, () => {
   console.log("Server is running on http://localhost:" + PORT);

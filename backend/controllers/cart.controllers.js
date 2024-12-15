@@ -60,6 +60,8 @@ export const updateQuantity = async (req, res) => {
     const { quantity } = req.body;
     const user = req.user;
     const existingItem = user.cartItems.find((item) => item.id === productId);
+    console.log(user._id)
+    console.log(user.cartItems._id)
 
     if (existingItem) {
       if (quantity === 0) {
