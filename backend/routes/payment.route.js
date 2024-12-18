@@ -1,12 +1,16 @@
 import express from "express";
-import { protectRoute } from "../middleware/auth.middleware.js";
-import { createCheckoutSession, checkoutSuccess } from "../controllers/payment.controllers.js";
-import dotenv from "dotenv";
+import axios from "axios";
+import { protectRoute, adminRoute } from "../middleware/auth.middleware.js";
+import {
+    createSubaccount,
+    initiatePayment,
+    verifyPayment,
+    webHook
+} from "../controllers/payment.controllers.js";
 
-dotenv.config();
 const router = express.Router();
-
-router.post("/create-checkout-session", protectRoute, createCheckoutSession);
-router.post("/checkout-success", protectRoute, checkoutSuccess);
-
+router.post("/create-subaccount", protectRoute, adminRoute, createSubaccount);
+router.post('/initiate-payment', protectRoute, initiatePayment);
+router.get('/verify', verifyPayment);
+router.post("/webhook", webHook)
 export default router;

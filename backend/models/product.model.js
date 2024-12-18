@@ -26,10 +26,19 @@ const productSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    userId: { // Reference to the User model
+    userId: { 
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', // Ensure this matches your User model name
-        required: true // Make it required if every product must have an owner
+        ref: 'User', 
+    },
+    stock: {
+        type: Number,
+        required: true,
+        min: 0
+    },
+    status: {
+        type: String,
+        enum: ['in stock', 'out of stock', 'discontinued'],
+        default: 'in stock'
     }
 }, { timestamps: true });
 

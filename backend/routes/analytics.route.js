@@ -1,37 +1,36 @@
 import express from 'express'
+import Order from '../models/order.model.js';
 import { adminRoute, protectRoute } from '../middleware/auth.middleware.js';
-import { getAnalyticsData, getDailySalesData } from '../controllers/analytics.controllers.js';
 const router = express.Router()
 
-router.get('/analytics', protectRoute, adminRoute, async (req, res) => {
+router.get('/sales-data', protectRoute, adminRoute, async (req, res) => {
     try {
         const adminId = req.user._id;
 
-        // 1. Total Sales (Sum of order totals for products sold by the admin)
         const totalSales = await Order.aggregate([
             { $match: { 'sellerId': adminId } },
             { $group: { _id: null, totalSales: { $sum: '$totalAmount' } } }
         ]);
 
-        // 2. Total Purchases (Sum of admin's purchases)
+        
         const totalPurchases = await Order.aggregate([
             { $match: { 'buyerId': adminId } },
             { $group: { _id: null, totalPurchases: { $sum: '$totalAmount' } } }
         ]);
 
-        // 3. Sales Returns
+        
         const salesReturns = await Order.aggregate([
             { $match: { 'sellerId': adminId, 'isReturned': true } },
             { $group: { _id: null, salesReturns: { $sum: '$totalAmount' } } }
         ]);
 
-        // 4. Purchase Returns
+        
         const purchaseReturns = await Order.aggregate([
             { $match: { 'buyerId': adminId, 'isReturned': true } },
             { $group: { _id: null, purchaseReturns: { $sum: '$totalAmount' } } }
         ]);
 
-        // 5. Top Selling Products
+        
         const topSellingProducts = await Order.aggregate([
             { $match: { 'sellerId': adminId } },
             { $unwind: '$products' }, // Decompose product array in each order
@@ -42,7 +41,7 @@ router.get('/analytics', protectRoute, adminRoute, async (req, res) => {
             { $limit: 5 } // Get top 5 selling products
         ]);
 
-        // 6. Weekly Sales and Purchases
+        
         const weeklySales = await Order.aggregate([
             { $match: { sellerId: adminId } },
             { $group: { _id: { $dayOfWeek: '$createdAt' }, totalSales: { $sum: '$totalAmount' } } }
@@ -68,7 +67,7 @@ router.get('/analytics', protectRoute, adminRoute, async (req, res) => {
     }
 });
 
-router.get('/analytics/weekly-sales-purchases', protectRoute, adminRoute, async (req, res) => {
+router.get('/weekly-sales-purchases', protectRoute, adminRoute, async (req, res) => {
     try {
         const adminId = req.user._id;
 
@@ -91,8 +90,7 @@ router.get('/analytics/weekly-sales-purchases', protectRoute, adminRoute, async 
             },
             { 
                 $group: { 
-                    _id: { $dayOfWeek: '$createdAt' }, // Group by day of the week
-                    totalSales: { $sum: '$totalAmount' }
+                    _id: { $dayOfWeek: '$createdAt' }, // Group by day of the week}
                 }
             }
         ]);
@@ -113,13 +111,13 @@ router.get('/analytics/weekly-sales-purchases', protectRoute, adminRoute, async 
             }
         ]);
 
-        // Format the data for all days of the week (ensure no missing days)
+        
         const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         const salesData = Array(7).fill(0);
         const purchaseData = Array(7).fill(0);
 
         weeklySales.forEach(item => {
-            const dayIndex = item._id - 1; // Convert MongoDB's $dayOfWeek (1-7) to index (0-6)
+            const dayIndex = item._id - 1; 
             salesData[dayIndex] = item.totalSales;
         });
 

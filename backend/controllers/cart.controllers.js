@@ -26,7 +26,7 @@ export const addToCart = async (req, res) => {
     if (existingItem) {
       existingItem.quantity += 1;
     } else {
-      user.cartItems.push(productId);
+      user.cartItems.push({ quantity: 1 , product: productId}); 
     }
 
     await user.save();
@@ -35,7 +35,7 @@ export const addToCart = async (req, res) => {
     console.log("Error in addToCart controller", error.message);
     res.status(500).json({ message: "Server error", error: error.message });
   }
-};
+}
 
 export const removeAllFromCart = async (req, res) => {
   try {
@@ -45,7 +45,7 @@ export const removeAllFromCart = async (req, res) => {
     if (!productId) {
       user.cartItems = [];
     } else {
-      user.cartItems = user.cartItems.filter((item) => item.id !== productId);
+      user.cartItems = user.cartItems.filter((item) => item.id === productId);
     }
     await user.save();
     res.json(user.cartItems);

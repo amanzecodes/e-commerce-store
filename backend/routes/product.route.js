@@ -3,22 +3,26 @@ import {
   deleteProduct,
   createProduct,
   getAllProducts,
-  // getFeaturedProducts,
-  // getRecommendedProducts,
+  getFeaturedProducts,
+  getRecommendedProducts,
   getProductsByCategory,
-  // toggleFeaturedProduct,
-  getAllProductsForUsers
+  toggleFeaturedProduct,
+  getAllProductsForAdmin,
+  recentProducts,
+  viewProduct
 } from "../controllers/product.controllers.js";
-import { protectRoute, adminRoute } from "../middleware/auth.middleware.js";
+import { protectRoute, adminRoute, superAdmin } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
 router.get("/", protectRoute, adminRoute, getAllProducts);
-router.get("/public",  getAllProductsForUsers);
+router.get("/adminproducts", protectRoute, superAdmin, getAllProductsForAdmin);
 router.get("/category/:category", getProductsByCategory);
 router.post("/", protectRoute, adminRoute, createProduct);
 router.delete("/:id", protectRoute, adminRoute, deleteProduct);
-// router.patch("/:id", protectRoute, adminRoute, toggleFeaturedProduct);
-// router.get("/recommendations", getRecommendedProducts);
-// router.get("/featured", getFeaturedProducts);
+router.get('/recent-products', recentProducts);
+router.patch("/:id", protectRoute, superAdmin, toggleFeaturedProduct);
+router.get("/recommendations", getRecommendedProducts);
+router.get("/featured", getFeaturedProducts);
+router.get('/products/:id', viewProduct);
 export default router;

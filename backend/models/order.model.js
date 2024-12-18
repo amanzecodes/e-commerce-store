@@ -29,10 +29,10 @@ const orderSchema = new mongoose.Schema({
         required: true,
         min: 0
     },
-    stripeSessionId: {
-        type: String,
-        unique: true
-    }
+    paymentStatus: 
+    { type: String, 
+      default: "Pending" 
+    },
 },
 { timestamps: true }
 );
