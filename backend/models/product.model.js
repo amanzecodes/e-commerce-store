@@ -25,10 +25,15 @@ const productSchema = new mongoose.Schema({
     isFeatured: {
         type: Boolean,
         default: false
+    },
+    userId: { // Reference to the User model
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User', // Ensure this matches your User model name
+        required: true // Make it required if every product must have an owner
     }
-}, {timestamps: true})
+}, { timestamps: true });
 
+// Create the Product model
+const Product = mongoose.model("Product", productSchema);
 
-const Product = mongoose.model("Product", productSchema)
-
-export default Product
+export default Product;
