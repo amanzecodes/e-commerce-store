@@ -1,4 +1,4 @@
-import Product from '../models/product.model.js'
+import Product from '../models/product.model.js';
 import Order from "../models/order.model.js";
 import Paystack from "paystack-api";
 import dotenv from "dotenv";
@@ -38,14 +38,12 @@ export const createSubaccount = async (req, res) => {
   }
 };
 
-
-
 export const initiatePayment = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id ).populate({
+    const user = await User.findById(req.user._id).populate({
       path: "cartItems.product",
     });
-   
+
     if (!user || !user.cartItems || user.cartItems.length === 0) {
       return res.status(400).json({ message: "Cart is empty or user not found" });
     }
@@ -53,30 +51,27 @@ export const initiatePayment = async (req, res) => {
     const products = await Product.find({
       _id: { $in: user.cartItems.map((cartItem) => cartItem.product) },
     });
-    
 
+    const cartWithDetails = user.cartItems.map((cartItem) => {
+        const product = products.find(
+          (prod) => prod._id.toString() === cartItem.product._id.toString()
+        );
+        if (!product) {
+          console.warn("Product not found for cartItem:", cartItem);
+          return null;
+        }
 
-const cartWithDetails = user.cartItems.map((cartItem) => {
-    const product = products.find(
-      (prod) => prod._id.toString() === cartItem.product._id.toString()
-    );
-    if (!product) {
-      console.warn("Product not found for cartItem:", cartItem);
-      return null;
+        return {
+          product,
+          quantity: cartItem.quantity,
+        };
+      })
+      .filter((item) => item !== null);
+
+    if (cartWithDetails.length === 0) {
+      console.warn("No valid cart items found");
+      return res.status(400).json({ message: "No valid cart items found" });
     }
-
-    return {
-      product,
-      quantity: cartItem.quantity,
-    };
-  })
-  .filter((item) => item !== null);
-
-console.log(cartWithDetails)
-if (cartWithDetails.length === 0) {
-  console.warn("No valid cart items found");
-}
-console.log("Cart with Details:", cartWithDetails);
 
     // Group items by sellers and calculate total amounts
     const sellerPayments = {};
@@ -143,9 +138,7 @@ console.log("Cart with Details:", cartWithDetails);
     console.error("Error initializing payment:", error.message);
     res.status(500).json({ message: "Failed to initialize payment", error: error.message });
   }
-}
-
-
+};
 
 export const verifyPayment = async (req, res) => {
   const { reference } = req.query;
@@ -172,8 +165,20 @@ export const verifyPayment = async (req, res) => {
       if (!order) {
         return res.status(404).json({ message: "Order not found" });
       }
+
+      // Reduce stock quantity for each product in the order
+      const orderedProducts = data.metadata.sellerPayments;
+      for (const sellerId in orderedProducts) {
+        orderedProducts[sellerId].products.forEach(async (product) => {
+          await Product.updateOne(
+            { _id: product._id },
+            { $inc: { stock: -product.quantity } }
+          );
+        });
+      }
+
       return res.status(200).json({
-        message: "Payment verified successfully",
+        message: "Payment verified successfully and stock updated",
         order,
       });
     } else {
@@ -189,7 +194,7 @@ export const verifyPayment = async (req, res) => {
 
 export const webHook = async (req, res) => {
   try {
-    //Verifying the webhook signature from Paystack
+    // Verifying the webhook signature from Paystack
     const secret = process.env.PAYSTACK_SECRET_KEY;
     const hash = crypto
       .createHmac("sha512", secret)
@@ -225,6 +230,17 @@ export const webHook = async (req, res) => {
       if (!updatedOrder) {
         console.error("Order not found");
         return res.status(404).json({ message: "Order not found" });
+      }
+
+      // Reduce stock quantity for each product in the order
+      const orderedProducts = metadata.sellerPayments;
+      for (const sellerId in orderedProducts) {
+        orderedProducts[sellerId].products.forEach(async (product) => {
+          await Product.updateOne(
+            { _id: product._id },
+            { $inc: { stock: -product.quantity } }
+          );
+        });
       }
 
       console.log("Order updated successfully:", updatedOrder);

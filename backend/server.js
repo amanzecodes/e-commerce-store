@@ -1,17 +1,17 @@
 import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
-
+import { connectDB } from "./lib/db.js";
 import authRoutes from "./routes/auth.route.js";
 import productRoutes from "./routes/product.route.js";
 import cartRoutes from "./routes/cart.route.js";
 import paymentRoutes from "./routes/payment.route.js";
 import analyticsRoute from "./routes/analytics.route.js";
-import settingsRoute from "./routes/settings.route.js";
-import reviewsRoute from "./routes/reviews.route.js";
+import settingsRoute from "./routes/settings.route.js"
 import clientsRoute from './routes/client.route.js'
 import faqRoute from './routes/faq.route.js'
-import { connectDB } from "./lib/db.js";
+import inventoryRoute from "./routes/inventory.route.js";
+import wishlistRoute from "./routes/wishlist.route.js";
 const app = express();
 dotenv.config();
 
@@ -24,12 +24,13 @@ app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
-app.use("/api/payment", paymentRoutes);
 app.use("/api/analytics", analyticsRoute);
 app.use("/api/settings", settingsRoute);
-app.use('/api/reviews', reviewsRoute);
+app.use("/api/inventory", inventoryRoute);;
 app.use('/api/clients', clientsRoute);
 app.use('/api/faq-section', faqRoute)
+app.use('/api/payment', paymentRoutes)
+app.use('/api/wishlist', wishlistRoute)
 
 app.listen(PORT, () => {
   console.log("Server is running on http://localhost:" + PORT);
