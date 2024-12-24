@@ -1,16 +1,15 @@
 import express from 'express';
 import {
-    createInventoryStock,
-    getInventoryOverview,
+    getAllInventory,
     updateStockQuantity,
     getLowStockProducts
-} from '../controllers/inventoryController.js';
-import { protectRoute, adminRoute } from '../middleware/auth.middleware.js';  // Assuming you have these middlewares
+} from '../controllers/inventory.controllers.js';
+import { protectRoute, adminRoute } from '../middleware/auth.middleware.js';  
 
 const router = express.Router();
 
-router.post('/create', protectRoute, adminRoute, createInventoryStock);
-router.get('/', protectRoute, adminRoute, getInventoryOverview);
+
+router.get('/', protectRoute, adminRoute, getAllInventory);
 router.put('/:id', protectRoute, adminRoute, updateStockQuantity);
 router.get('/low-stock', protectRoute, adminRoute, getLowStockProducts);
 

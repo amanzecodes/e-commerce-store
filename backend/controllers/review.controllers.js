@@ -1,14 +1,11 @@
 import Product from "../models/product.model.js";
 import Review from "../models/review.model.js";
-import mongoose from "mongoose";
 
 export const getReview = async (req, res) => {
-  
   const { productId } = req.params;
 
   try {
-    const reviews = await Review.find({ productId })
-    .populate("user", "name")
+    const reviews = await Review.find({ productId }).populate("user", "name");
 
     if (reviews.length === 0) {
       return res
@@ -17,7 +14,7 @@ export const getReview = async (req, res) => {
     }
 
     res.status(200).json({
-      response: reviews.map(review => ({
+      response: reviews.map((review) => ({
         ...review.toObject(),
       })),
     });
@@ -30,7 +27,7 @@ export const getReview = async (req, res) => {
 export const addReview = async (req, res) => {
   const { productId } = req.params;
   const { rating, comment } = req.body;
-  const userId = req.user._id
+  const userId = req.user._id;
 
   try {
     const product = await Product.findById(productId);
@@ -40,7 +37,10 @@ export const addReview = async (req, res) => {
       });
     }
 
-    const existingReview = await Review.findOne({ productId, user: userId });
+    const existingReview = await Review.findOne({
+      product: productId,
+      user: userId,
+    });
 
     if (existingReview) {
       return res.status(400).json({
@@ -56,7 +56,7 @@ export const addReview = async (req, res) => {
 
     await review.save();
 
-    res.status(201).json({ message: "Review created successfully", });
+    res.status(201).json({ message: "Review created successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error creating review", error });
   }
@@ -118,11 +118,9 @@ export const averageReview = async (req, res) => {
       averageRating: reviews[0].averageRating.toFixed(1),
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        message: "Error calculating average rating",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Error calculating average rating",
+      error: error.message,
+    });
   }
 };
