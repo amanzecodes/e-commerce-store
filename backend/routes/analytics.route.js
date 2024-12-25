@@ -1,4 +1,9 @@
-app.get("/api/dashboard", async (req, res) => {
+import Order from "./models/Order.js"; 
+// import Product from "./models/Product.js"
+import express from 'express'
+import { protectRoute, adminRoute } from "../middleware/auth.middleware.js";
+const router = express.Router();
+router.get("/dashboard", protectRoute, adminRoute, async (req, res) => {
     try {
       // 1. Calculate Total Sales
       const totalSales = await Order.aggregate([
@@ -21,7 +26,7 @@ app.get("/api/dashboard", async (req, res) => {
       const weeklySales = await Order.aggregate([
         {
           $group: {
-            _id: { $week: "$createdAt" }, // Changed $dayOfWeek to $week for weekly aggregation
+            _id: { $week: "$createdAt" },
             sales: { $sum: "$totalAmount" },
           },
         },
@@ -51,7 +56,7 @@ app.get("/api/dashboard", async (req, res) => {
         },
       ]);
   
-      // Respond with dashboard data
+    
       res.json({
         sales: totalSales[0]?.total || 0,
         purchases: totalPurchases[0]?.total || 0,
@@ -64,3 +69,5 @@ app.get("/api/dashboard", async (req, res) => {
       res.status(500).json({ message: "Server error", error: error.message });
     }
   });
+
+export default router;

@@ -31,6 +31,10 @@
   export const signup = async (req, res) => {
     const { email, password, name, role } = req.body;
 
+    if (!email || !password || !name || !role) {
+      throw new Error("All fields are required");
+    }
+
     try {
       const userExists = await User.findOne({ email });
 
@@ -137,7 +141,3 @@
       res.status(500).json({ message: "Server Error", error: error.message})
     }
   };
-
-
-
-  
