@@ -3,19 +3,28 @@ import Product from "../models/product.model.js";
 
 export const getCartProducts = async (req, res) => {
   try {
-    const products = await Product.find({ _id: { $in: req.user.cartItems } });
+    // Validate user and cartItems
+    if (!req.user || !req.user.cartItems || req.user.cartItems.length === 0) {
+      return res.status(404).json({ message: "No items in the cart." });
+    }
 
-    //add quantity for each products
+    // Extract product IDs from cartItems
+    const productIds = req.user.cartItems.map((item) => item.product);
+
+    // Fetch products from the Product collection
+    const products = await Product.find({ _id: { $in: productIds } });
+
+    // Map products to include their quantities
     const cartItems = products.map((product) => {
-      const item = req.user.cartItems.find(
-        (cartItem) => cartItem.product.equals(product.id)
+      const item = req.user.cartItems.find((cartItem) =>
+        cartItem.product.equals(product.id)
       );
       return { ...product.toJSON(), quantity: item.quantity };
     });
 
-    res.json(cartItems);
+    res.status(200).json(cartItems);
   } catch (error) {
-    console.log("Error in getCartProducts controller", error.message);
+    console.error("Error in getCartProducts controller:", error.message);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
