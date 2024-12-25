@@ -21,6 +21,7 @@ const productSchema = new mongoose.Schema(
     },
     category: {
       type: String,
+      enum: ["shoes", "corporate wears", "sports", "accessories", "tech"],
       required: true,
     },
     isFeatured: {

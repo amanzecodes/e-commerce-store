@@ -6,7 +6,7 @@ import authRoutes from "./routes/auth.route.js";
 import productRoutes from "./routes/product.route.js";
 import cartRoutes from "./routes/cart.route.js";
 import paymentRoutes from "./routes/payment.route.js";
-import analyticsRoute from "./routes/analytics.route.js";
+// import analyticsRoute from "./routes/analytics.route.js";
 import settingsRoute from "./routes/settings.route.js"
 import clientsRoute from './routes/client.route.js'
 import faqRoute from './routes/faq.route.js'
@@ -24,7 +24,7 @@ app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
-app.use("/api/analytics", analyticsRoute);
+// app.use("/api/analytics", analyticsRoute);
 app.use("/api/settings", settingsRoute);
 app.use("/api/inventory", inventoryRoute);;
 app.use('/api/clients', clientsRoute);
