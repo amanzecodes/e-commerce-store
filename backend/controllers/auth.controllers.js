@@ -47,10 +47,7 @@
 
       // authenticate
       const { accessToken, refreshToken } = generateTokens(user._id);
-  
-
       setCookies(res, accessToken, refreshToken);
-
       res.status(201).json({
         _id: user._id,
         name: user.name,

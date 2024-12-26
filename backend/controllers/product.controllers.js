@@ -205,7 +205,7 @@ export const viewProduct = async (req, res) => {
 
 export const getProductsBySearch = async (req, res) => {
   try {
-    const { query, page = 1, limit = 30 } = req.query; // Defaults to page 1, 10 items per page
+    const { query, page = 1, limit = 10 } = req.query; // Defaults to page 1, 10 items per page
     const skip = (page - 1) * limit;
 
     if (!query) {
