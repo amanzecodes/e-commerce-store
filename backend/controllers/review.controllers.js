@@ -38,7 +38,7 @@ export const addReview = async (req, res) => {
     }
 
     const existingReview = await Review.findOne({
-      product: productId,
+      productId: productId,
       user: userId,
     });
 

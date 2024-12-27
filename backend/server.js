@@ -13,6 +13,7 @@ import clientsRoute from './routes/client.route.js'
 import faqRoute from './routes/faq.route.js'
 import inventoryRoute from "./routes/inventory.route.js";
 import wishlistRoute from "./routes/wishlist.route.js";
+import couponRoute from './routes/coupon.route.js'
 const app = express();
 app.use(cors())
 dotenv.config();
@@ -33,6 +34,7 @@ app.use('/api/clients', clientsRoute);
 app.use('/api/faq-section', faqRoute)
 app.use('/api/payment', paymentRoutes)
 app.use('/api/wishlist', wishlistRoute)
+app.use('/api/coupon', couponRoute)
 
 app.listen(PORT, () => {
   console.log("Server is running on http://localhost:" + PORT);

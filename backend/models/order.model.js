@@ -31,6 +31,11 @@ const orderSchema = new mongoose.Schema(
       min: 0,
     },
     paymentStatus: { type: String, default: "Pending" },
+    stripeSessionId: {
+      type: String,
+      unique: true,
+      sparse: true, // Ensures index only applies to non-null values
+    },
     isReturned: {
       type: Boolean,
       default: false,
