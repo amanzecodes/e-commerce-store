@@ -1,4 +1,4 @@
-import Order from "./models/Order.js"; 
+import Order from "../models/order.model.js"; 
 // import Product from "./models/Product.js"
 import express from 'express'
 import { protectRoute, adminRoute } from "../middleware/auth.middleware.js";

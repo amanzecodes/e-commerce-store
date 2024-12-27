@@ -11,6 +11,6 @@ import {
 const router = express.Router();
 router.post("/create-subaccount", protectRoute, adminRoute, createSubaccount);
 router.post('/initiate-payment', protectRoute, initiatePayment);
-router.get('/verify', verifyPayment);
+router.get('/verify/:reference', verifyPayment);
 router.post("/webhook", webHook)
 export default router;

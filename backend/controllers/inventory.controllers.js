@@ -3,8 +3,7 @@ import User from "../models/user.model.js";
 
 export const getAllInventory = async (req, res) => {
   const sellerId = req.user._id;
-  const { page = 1, limit = 10, status, category } = req.query; // Default page=1 and limit=10 frontend-dev can set it anything they want though
-
+  const { page = 1, limit = 10, status, category } = req.query; // Default page=1 and limit=10 although it can change
   try {
     const skip = (page - 1) * limit;
 
@@ -24,7 +23,7 @@ export const getAllInventory = async (req, res) => {
       query.category = category;
     }
 
-    // Fetch the inventory with server-side pagination
+    // Fetch the inventory with server-side pagination and filter
     const inventory = await Product.find(query)
       .select("name stock category price")
       .skip(skip)
@@ -54,7 +53,7 @@ export const updateStockQuantity = async (req, res) => {
   const { id } = req.params;
   const { quantity } = req.body;
 
-  if (quantity === undefined) {
+  if (!quantity) {
     return res
       .status(400)
       .json({ success: false, message: "Quantity is required" });

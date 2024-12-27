@@ -53,20 +53,19 @@ export const initiatePayment = async (req, res) => {
     });
 
     const cartWithDetails = user.cartItems.map((cartItem) => {
-        const product = products.find(
-          (prod) => prod._id.toString() === cartItem.product._id.toString()
-        );
-        if (!product) {
-          console.warn("Product not found for cartItem:", cartItem);
-          return null;
-        }
+      const product = products.find(
+        (prod) => prod._id.toString() === cartItem.product._id.toString()
+      );
+      if (!product) {
+        console.warn("Product not found for cartItem:", cartItem);
+        return null;
+      }
 
-        return {
-          product,
-          quantity: cartItem.quantity,
-        };
-      })
-      .filter((item) => item !== null);
+      return {
+        product,
+        quantity: cartItem.quantity,
+      };
+    }).filter((item) => item !== null);
 
     if (cartWithDetails.length === 0) {
       console.warn("No valid cart items found");
@@ -107,7 +106,8 @@ export const initiatePayment = async (req, res) => {
         throw new Error(`Seller with ID ${sellerId} does not have a valid subaccount.`);
       }
 
-      return await axios.post(
+      // Send request to Paystack API to initialize payment
+      const paymentResponse = await axios.post(
         "https://api.paystack.co/transaction/initialize",
         {
           email: user.email,
@@ -116,7 +116,7 @@ export const initiatePayment = async (req, res) => {
           metadata: {
             sellerPayments,
           },
-          subaccount: seller.subAccountId,
+          // subaccount: seller.subAccountId,
           transaction_charge: 0,
         },
         {
@@ -126,14 +126,25 @@ export const initiatePayment = async (req, res) => {
           },
         }
       );
+
+      return paymentResponse.data; // Return the entire response from Paystack
     });
 
+    // Await all payment initialization promises
     const paymentResponses = await Promise.all(paymentPromises);
 
+    // Extract transaction references and payment URLs
+    const transactionDetails = paymentResponses.map(response => ({
+      reference: response.data.reference,
+      authorization_url: response.data.authorization_url,
+    }));
+
+    // Send response with transaction details
     res.status(200).json({
       message: "Payment initialized successfully",
-      data: paymentResponses.map(response => response.data),
+      data: transactionDetails,
     });
+    
   } catch (error) {
     console.error("Error initializing payment:", error.message);
     res.status(500).json({ message: "Failed to initialize payment", error: error.message });
@@ -141,7 +152,7 @@ export const initiatePayment = async (req, res) => {
 };
 
 export const verifyPayment = async (req, res) => {
-  const { reference } = req.query;
+  const { reference } = req.params;
 
   try {
     const response = await axios.get(
@@ -193,6 +204,7 @@ export const verifyPayment = async (req, res) => {
 };
 
 export const webHook = async (req, res) => {
+
   try {
     // Verifying the webhook signature from Paystack
     const secret = process.env.PAYSTACK_SECRET_KEY;

@@ -3,7 +3,7 @@ import Product from "../models/product.model.js";
 
 export const getCartProducts = async (req, res) => {
   try {
-    // Validate user and cartItems
+  
     if (!req.user || !req.user.cartItems || req.user.cartItems.length === 0) {
       return res.status(404).json({ message: "No items in the cart." });
     }
@@ -77,7 +77,7 @@ export const addToCart = async (req, res) => {
 
       existingItem.quantity += quantity;
     } else {
-      user.cartItems.push({ quantity, product: productId });
+      user.cartItems.push({ quantity: quantity, product: productId });
     }
     await user.save();
 
@@ -101,7 +101,7 @@ export const removeAllFromCart = async (req, res) => {
     if (!productId) {
       user.cartItems = [];
     } else {
-      user.cartItems = user.cartItems.filter((item) => item.id === productId);
+      user.cartItems = user.cartItems.filter((item) => item.product.equals(productId));
     }
     await user.save();
     res.json(user.cartItems);
