@@ -40,34 +40,44 @@ export const getAllProductsForAdmin = async (req, res) => {
   };
 };
 
+import cloudinary from "../lib/cloudinary.js";
+import Product from "../models/product.model.js";
+
 export const createProduct = async (req, res) => {
   try {
-    const { name, description, price, image, category, stock } = req.body;
-    // let cloudinaryResponse = null;
+    const { name, description, price, category, stock } = req.body;
 
-    if(!name || !description || !price || !category || !stock) {
+    if (!name || !description || !price || !category || !stock) {
       throw new Error("All fields are required");
     }
 
-    // if(image) {
-    //   cloudinaryResponse = await cloudinary.uploader.upload(image, {folder:"products"})
-    // }
+    let cloudinaryResponse = null;
+
+    // Check if an image file is uploaded
+    if (req.file) {
+      cloudinaryResponse = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          { folder: "products" },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          }
+        );
+        uploadStream.end(req.file.buffer);
+      });
+    }
 
     const newProduct = new Product({
       name,
       description,
       price,
-      image,
+      image: cloudinaryResponse?.secure_url ? cloudinaryResponse.secure_url : "",
       category,
-      userId: req.user._id, 
+      userId: req.user._id,
       stock: stock,
     });
 
-    // cloudinaryResponse?.secure_url ? cloudinaryResponse.secure_url : "",
-
     const savedProduct = await newProduct.save();
-
-
     res.status(201).json(savedProduct);
   } catch (error) {
     console.log("Error in createProduct controller", error.message);
@@ -75,18 +85,6 @@ export const createProduct = async (req, res) => {
   }
 };
 
-export const recentProducts = async (req, res) => {
-  try {
-    const recentProducts = await Product.find()
-      .sort({ createdAt: -1 }) //descending order
-      .limit(10);
-
-    res.status(200).json(recentProducts);
-  } catch (error) {
-    console.error("Error fetching recent products:", error.message);
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
 
 export const deleteProduct = async (req, res) => {
   try {
@@ -97,15 +95,18 @@ export const deleteProduct = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    // if(product.image) {
-    //   const publicId = product.image.split('/').pop().split(".")[0];
-    //    try {
-    //     await cloudinary.uploader.destroy(`products/${publicId}`)
-    //     console.log("Deleted image from cloudinary")
-    //    } catch (error) {
-    //     console.log("error deleting image from cloudinary")
-    //    }
-    // }
+    if (product.image) {
+      // Extract the public ID from the image URL
+      const publicId = product.image
+          .split('/').slice(-2, -1) 
+          .concat(product.image.split('/').pop().split('.')[0]); 
+      try {
+          await cloudinary.uploader.destroy(publicId); // Use only the public ID
+          console.log("Deleted image from Cloudinary");
+      } catch (error) {
+          console.log("Error deleting image from Cloudinary", error.message);
+      }
+  }
 
     res.status(200).json({ message: "Product deleted successfully" });
   } catch (error) {

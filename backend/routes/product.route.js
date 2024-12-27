@@ -1,4 +1,5 @@
 import express from "express";
+import multer from 'multer';
 import {
   deleteProduct,
   createProduct,
@@ -16,11 +17,13 @@ import {
 import { protectRoute, adminRoute, superAdmin } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
+const storage = multer.memoryStorage(); // Store files in memory
+const upload = multer({ storage: storage });
 
 // router.get("/", protectRoute, adminRoute, getAllProducts);
 router.get("/adminproducts", protectRoute, superAdmin, getAllProductsForAdmin);
 router.get("/category/:category", getProductsByCategory);
-router.post("/", protectRoute, adminRoute, createProduct);
+router.post("/", protectRoute, adminRoute, upload.single('image'), createProduct);
 router.delete("/:id", protectRoute, adminRoute, deleteProduct);
 router.get('/recent-products', recentProducts);
 router.patch("/:id", protectRoute, superAdmin, toggleFeaturedProduct);
