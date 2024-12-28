@@ -40,9 +40,6 @@ export const getAllProductsForAdmin = async (req, res) => {
   };
 };
 
-import cloudinary from "../lib/cloudinary.js";
-import Product from "../models/product.model.js";
-
 export const createProduct = async (req, res) => {
   try {
     const { name, description, price, category, stock } = req.body;
