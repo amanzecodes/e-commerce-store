@@ -1,35 +1,42 @@
-// const express = require("express");
-// const router = express.Router();
-// const Coupon = require("../models/coupon");
-// const Order = require("../models/order");
+// -------------- HOW THE FRONTEND DEVELOPER CAN USE NOTIFICATION ENDPOINT ---------------- |
 
+// 1. Install the socket.io-client package [npm install socket.io-client]
 
+// import { useEffect } from "react";
+// import { io } from "socket.io-client";
+// import { toast, ToastContainer } from "react-toastify";
+// import "react-toastify/dist/ReactToastify.css"; 
 
-// // Route to update a coupon
-// router.put("/coupons/:id", async (req, res) => {
-//   const { id } = req.params;
-//   const { code, discount, expiryDate, isActive } = req.body;
+// const Dashboard = () => {
+//   const socket = io("http://backend-url"); // Replace with the backend URL
 
-//   try {
-//     const updatedCoupon = await Coupon.findByIdAndUpdate(
-//       id,
-//       { code, discount, expiryDate, isActive },
-//       { new: true }
-//     );
-//     res.status(200).json({ success: true, data: updatedCoupon });
-//   } catch (error) {
-//     res.status(400).json({ success: false, message: error.message });
-//   }
-// });
+//   useEffect(() => {
+//     // Listen for low-stock notifications
+//     socket.on("lowStockNotification", (data) => {
+//       // Display a toast notification
+//       toast.warn(`${data.message}: ${data.data.map((p) => p.name).join(", ")}`, {
+//         position: "top-right",
+//         autoClose: 5000, // 5 seconds
+//         hideProgressBar: false,
+//         closeOnClick: true,
+//         pauseOnHover: true,
+//         draggable: true,
+//       });
+//     });
 
-// // Route to delete a coupon
-// router.delete("/coupons/:id", async (req, res) => {
-//   const { id } = req.params;
+//     return () => {
+//       socket.disconnect();
+//     };
+//   }, []);
 
-//   try {
-//     await Coupon.findByIdAndDelete(id);
-//     res.status(200).json({ success: true, message: "Coupon deleted" });
-//   } catch (error) {
-//     res.status(400).json({ success: false, message: error.message });
-//   }
-// });
+//   return (
+//     <div>
+//       <h1>Seller Dashboard</h1>
+//       <ToastContainer />
+//     </div>
+//   );
+// };
+
+// export default Dashboard;
+// ---------------------------------------------------------------------- |
+

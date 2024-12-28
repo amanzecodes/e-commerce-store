@@ -1,5 +1,40 @@
 import Product from "../models/product.model.js";
 import User from "../models/user.model.js";
+import { io } from "../lib/socket.js";
+
+io.on("connection", (socket) => {
+  console.log("A user connected:", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
+});
+
+const LOW_STOCK_THRESHOLD = 10;
+
+export const notifyLowStockProducts = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      console.error("User not found");
+      return;
+    }
+
+    const lowStockProducts = await Product.find({
+      userId: userId,
+      stock: { $lte: LOW_STOCK_THRESHOLD },
+    });
+
+    if (lowStockProducts.length > 0) {
+      io.to(userId).emit("lowStockNotification", {
+        message: "Some of your products are low on stock.",
+        data: lowStockProducts,
+      });
+    }
+  } catch (error) {
+    console.error("Error sending low stock notification:", error.message);
+  }
+};
 
 export const getAllInventory = async (req, res) => {
   const sellerId = req.user._id;
@@ -22,6 +57,8 @@ export const getAllInventory = async (req, res) => {
     if (category) {
       query.category = category;
     }
+
+    notifyLowStockProducts(sellerId);
 
     // Fetch the inventory with server-side pagination and filter
     const inventory = await Product.find(query)
@@ -86,9 +123,9 @@ export const updateStockQuantity = async (req, res) => {
   }
 };
 
+
 // Controller for GET /inventory/low-stock
 export const getLowStockProducts = async (req, res) => {
-  const LOW_STOCK_THRESHOLD = 10;
   const userId = req.user.id;
 
   try {
@@ -104,6 +141,13 @@ export const getLowStockProducts = async (req, res) => {
       userId: userId,
       stock: { $lte: LOW_STOCK_THRESHOLD },
     });
+
+    if (lowStockProducts.length > 0) {
+      io.to(userId).emit("lowStockNotification", {
+        message: "Some of your products are low on stock.",
+        data: lowStockProducts,
+      });
+    }
 
     res.status(200).json({
       success: true,

@@ -36,6 +36,21 @@ const userSchema = new mongoose.Schema(
       enum: ["customer", "admin", "superadmin"],
       default: "customer",
     },
+    sellerType: {
+      type: String,
+      enum: ["individual", "business"],
+      default: null, // Null if the user is not a seller
+    },
+    subscription: {
+      type: String,
+      enum: ["hebron_plus", "business", null],
+      default: null,
+    },
+    subscriptionStatus: {
+      type: String,
+      enum: ["active", "inactive", null],
+      default: null,
+    },
     subAccountId: { type: Number },
   },
   {

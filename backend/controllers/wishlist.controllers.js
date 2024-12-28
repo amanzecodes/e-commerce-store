@@ -4,7 +4,7 @@ export const addToWishlist = async (req, res) => {
         const { productId } = req.params;
         const  userId  = req.user._id;
       
-        try {
+try {
           const product = await Product.findById(productId);
           if (!product) {
             return res.status(404).json({ success: false, message: 'Product not found' });

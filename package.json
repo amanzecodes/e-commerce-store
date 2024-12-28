@@ -20,11 +20,11 @@
     "crypto": "^1.0.1",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "ioredis": "^5.4.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.4",
     "multer": "^1.4.5-lts.1",
-    "paystack-api": "^2.0.6"
+    "paystack-api": "^2.0.6",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"

@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { io } from '../lib/socket.js'
+import Notification from "../models/notifications.model.js";
 
 const productSchema = new mongoose.Schema(
   {
@@ -46,7 +48,26 @@ const productSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Create the Product model
-const Product = mongoose.model("Product", productSchema);
+productSchema.post("save", async function (doc) {
+  const LOW_STOCK_THRESHOLD = 10;
 
+  if (doc.stock <= LOW_STOCK_THRESHOLD) {
+    const userId = doc.userId;
+
+    await Notification.create({
+      userId: userId,
+      type: "LOW-STOCK",
+      message: `Product "${doc.name}" is low on stock.`,
+      data: { productId: doc._id, stock: doc.stock },
+    });
+
+    io.to(userId).emit("notification", {
+      type: "LOW-STOCK",
+      message: `Product "${doc.name}" is low on stock.`,
+    });
+  }
+});
+
+
+const Product = mongoose.model("Product", productSchema);
 export default Product;

@@ -8,16 +8,17 @@ import productRoutes from "./routes/product.route.js";
 import cartRoutes from "./routes/cart.route.js";
 import paymentRoutes from "./routes/payment.route.js";
 import analyticsRoute from "./routes/analytics.route.js";
-import settingsRoute from "./routes/settings.route.js"
-import clientsRoute from './routes/client.route.js'
-import faqRoute from './routes/faq.route.js'
+import settingsRoute from "./routes/settings.route.js";
+import clientsRoute from "./routes/client.route.js";
+import faqRoute from "./routes/faq.route.js";
 import inventoryRoute from "./routes/inventory.route.js";
 import wishlistRoute from "./routes/wishlist.route.js";
-import couponRoute from './routes/coupon.route.js'
+import couponRoute from "./routes/coupon.route.js";
+import subscriptionRoutes from "./routes/subscription.route.js";
+import notificationRoute from "./routes/notifications.route.js";
 const app = express();
-app.use(cors())
+app.use(cors());
 dotenv.config();
-
 
 const PORT = process.env.PORT || 5000;
 
@@ -29,12 +30,14 @@ app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/analytics", analyticsRoute);
 app.use("/api/settings", settingsRoute);
-app.use("/api/inventory", inventoryRoute);;
-app.use('/api/clients', clientsRoute);
-app.use('/api/faq-section', faqRoute)
-app.use('/api/payment', paymentRoutes)
-app.use('/api/wishlist', wishlistRoute)
-app.use('/api/coupon', couponRoute)
+app.use("/api/inventory", inventoryRoute);
+app.use("/api/clients", clientsRoute);
+app.use("/api/faq-section", faqRoute);
+app.use("/api/payment", paymentRoutes);
+app.use("/api/wishlist", wishlistRoute);
+app.use("/api/coupon", couponRoute);
+app.use("/api/subscriptions", subscriptionRoutes);
+app.use("/api/notification", notificationRoute);
 
 app.listen(PORT, () => {
   console.log("Server is running on http://localhost:" + PORT);
