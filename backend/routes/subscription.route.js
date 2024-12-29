@@ -5,7 +5,7 @@ import { initiateSubscriptionPayment, verifyPaymentAndSubscribeUser } from "../c
 
 const router = express.Router();
 
-router.post("/initiateSubscription", protectRoute, initiateSubscriptionPayment)
+router.post("/initiateSubscription/:code", protectRoute, initiateSubscriptionPayment)
 router.get("/verifySubscription/:reference", verifyPaymentAndSubscribeUser)
 
 export default router;

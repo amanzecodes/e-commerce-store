@@ -5,9 +5,9 @@ dotenv.config();
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 
-// Initiate payment for subscription
 export const initiateSubscriptionPayment = async (req, res) => {
-  const { email, amount, planCode } = req.body;
+  const { planCode } = req.params;
+  const { email, amount } = req.body;
 
   const userId = req.user._id;
 
@@ -15,7 +15,6 @@ export const initiateSubscriptionPayment = async (req, res) => {
     // Convert amount to kobo (Paystack uses kobo for currency)
     const amountInKobo = amount * 100;
 
-    // Create a payment initialization request
     const response = await axios.post(
       "https://api.paystack.co/transaction/initialize",
       {
@@ -80,7 +79,7 @@ export const verifyPaymentAndSubscribeUser = async (req, res) => {
             },
           }
         );
-  
+
         // Update user's subscription status in the database
         await User.findByIdAndUpdate(metadata.userId, {
           subscription: metadata.planCode,
