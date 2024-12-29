@@ -13,7 +13,6 @@ import clientsRoute from "./routes/client.route.js";
 import faqRoute from "./routes/faq.route.js";
 import inventoryRoute from "./routes/inventory.route.js";
 import wishlistRoute from "./routes/wishlist.route.js";
-import couponRoute from "./routes/coupon.route.js";
 import subscriptionRoutes from "./routes/subscription.route.js";
 import notificationRoute from "./routes/notifications.route.js";
 const app = express();
@@ -35,7 +34,6 @@ app.use("/api/clients", clientsRoute);
 app.use("/api/faq-section", faqRoute);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/wishlist", wishlistRoute);
-app.use("/api/coupon", couponRoute);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/notification", notificationRoute);
 

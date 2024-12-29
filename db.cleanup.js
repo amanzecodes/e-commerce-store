@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import Coupon from "../models/coupon.model.js";
+import Coupon from "./backend/models/coupon.model.js";
 
 const DATABASE_URL = "mongodb+srv://heroicemblem69:7FtU618PABmSHRBq@cluster0.saszo.mongodb.net/ecommerce_db?retryWrites=true&w=majority&appName=Cluster0"; 
 
