@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import Coupon from "../models/coupon.model.js";
 
-const DATABASE_URL = "mongodb://localhost:27017/ecommerce_db"; 
+const DATABASE_URL = "mongodb+srv://heroicemblem69:7FtU618PABmSHRBq@cluster0.saszo.mongodb.net/ecommerce_db?retryWrites=true&w=majority&appName=Cluster0"; 
 
 const cleanupDatabase = async () => {
   try {
