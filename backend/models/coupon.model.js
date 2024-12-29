@@ -5,18 +5,18 @@ const couponSchema = new mongoose.Schema(
     productId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",
-      required: true, // Ensures every coupon is tied to a product
+      required: true, 
     },
-    code: {
+    giftCode: { 
       type: String,
-      required: true,
       trim: true,
-      unique: true, // Ensures coupon codes are unique
+      unique: true, 
+      required: true,
     },
-    discountPercentage: {
+    discount: { 
       type: Number,
       required: true,
-      default: 10, // Default discount percentage
+      default: 10, 
     },
     isActive: {
       type: Boolean,
@@ -35,6 +35,8 @@ const couponSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+couponSchema.index({ giftCode: 1 }, { unique: true })
 
 const Coupon = mongoose.model("Coupon", couponSchema);
 export default Coupon;
