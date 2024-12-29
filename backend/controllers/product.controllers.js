@@ -48,32 +48,32 @@ export const createProduct = async (req, res) => {
       throw new Error("All fields are required");
     }
 
-    // let cloudinaryResponse = null;
+    let cloudinaryResponse = null;
 
-    // Check if an image file is uploaded
-    // if (req.file) {
-    //   cloudinaryResponse = await new Promise((resolve, reject) => {
-    //     const uploadStream = cloudinary.uploader.upload_stream(
-    //       { folder: "products" },
-    //       (error, result) => {
-    //         if (error) return reject(error);
-    //         resolve(result);
-    //       }
-    //     );
-    //     uploadStream.end(req.file.buffer);
-    //   });
-    // }
+    // Check if the image file is uploaded
+    if (req.file) {
+      cloudinaryResponse = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          { folder: "products" },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          }
+        );
+        uploadStream.end(req.file.buffer);
+      });
+    }
 
     const newProduct = new Product({
       name,
       description,
       price,
-      image,
+      image: cloudinaryResponse?.secure_url ? cloudinaryResponse.secure_url : "",
       category,
       userId: req.user._id,
       stock: stock,
     });
-    // cloudinaryResponse?.secure_url ? cloudinaryResponse.secure_url : "",
+
 
     const savedProduct = await newProduct.save();
     res.status(201).json(savedProduct);
