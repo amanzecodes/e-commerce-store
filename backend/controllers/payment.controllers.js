@@ -53,66 +53,75 @@ export const createSubaccount = async (req, res) => {
   }
 };
 
-
 export const initiatePayment = async (req, res) => {
   try {
+    // Retrieve the user and their cart items
     const user = await User.findById(req.user._id).populate({
       path: "cartItems.product",
     });
 
-    if (!user || !user.cartItems || user.cartItems.length === 0) {
+    if (!user || !user.cartItems.length) {
       return res.status(400).json({ message: "Cart is empty or user not found" });
     }
 
+    // Fetch all products in the user's cart
     const products = await Product.find({
       _id: { $in: user.cartItems.map((cartItem) => cartItem.product) },
     });
 
-    const cartWithDetails = user.cartItems.map((cartItem) => {
-      const product = products.find(
-        (prod) => prod._id.toString() === cartItem.product._id.toString()
-      );
-      if (!product) {
-        return null;
-      }
+    // Prepare the cart with product details
+    const cartWithDetails = user.cartItems
+      .map((cartItem) => {
+        const product = products.find(
+          (prod) => prod._id.toString() === cartItem.product._id.toString()
+        );
+        if (!product) return null;
+        return { product, quantity: cartItem.quantity };
+      })
+      .filter(Boolean);
 
-      return {
-        product,
-        quantity: cartItem.quantity,
-      };
-    }).filter((item) => item !== null);
-
-    if (cartWithDetails.length === 0) {
+    if (!cartWithDetails.length) {
       return res.status(400).json({ message: "No valid cart items found" });
     }
 
-    // Group items by sellers and calculate total amounts
-    const sellerPayments = {};
+    // Calculate total amount and prepare split configuration
     let totalAmount = 0;
+    const splitSubaccounts = [];
+    const sellerShares = {};
 
-    cartWithDetails.forEach(({ product, quantity }) => {
+    for (const { product, quantity } of cartWithDetails) {
       const sellerId = product.userId;
-      if (!sellerId) {
-        throw new Error("Seller ID missing for one of the products");
+      const itemAmount = product.price * quantity;
+      totalAmount += itemAmount;
+
+      if (!sellerShares[sellerId]) {
+        const seller = await User.findById(sellerId);
+        if (seller && seller.subAccountId) {
+          sellerShares[sellerId] = {
+            subaccount: seller.subAccountId,
+            share: 0,
+          };
+        }
       }
 
-      const itemPrice = product.price * quantity;
-
-      if (!sellerPayments[sellerId]) {
-        sellerPayments[sellerId] = { amount: 0, products: [] };
+      if (sellerShares[sellerId]) {
+        sellerShares[sellerId].share += itemAmount;
       }
+    }
 
-      sellerPayments[sellerId].amount += itemPrice;
-      sellerPayments[sellerId].products.push({
-        name: product.name,
-        quantity,
-        price: product.price,
+    // Add each seller's share to the split configuration
+    for (const sellerId in sellerShares) {
+      const { subaccount, share } = sellerShares[sellerId];
+      splitSubaccounts.push({ subaccount, share: (share / totalAmount) * 100 }); // Convert to percentage
+    }
+
+    if (!splitSubaccounts.length) {
+      return res.status(400).json({
+        message: "At least one seller must have a valid subaccount",
       });
+    }
 
-      totalAmount += itemPrice;
-    });
-
-    // Create an order in the database
+    // Create a new order
     const newOrder = new Order({
       user: user._id,
       products: cartWithDetails.map(({ product, quantity }) => ({
@@ -121,83 +130,50 @@ export const initiatePayment = async (req, res) => {
       })),
       totalAmount,
       paymentStatus: "Pending",
-      stripeSessionId: crypto.randomBytes(16).toString("hex")
+      stripeSessionId: crypto.randomBytes(16).toString("hex"),
     });
 
     const createdOrder = await newOrder.save();
 
-    console.log("Order created:", createdOrder);
+    const paystackUrl = "https://api.paystack.co/transaction/initialize";
+    const paymentData = {
+      email: user.email,
+      amount: totalAmount * 100, // Convert to kobo
+      callback_url: `${process.env.CLIENT_URL}/payment/verify`,
+      metadata: { orderId: createdOrder._id },
+      split: {
+        type: "percentage",
+        bearer_type: "subaccount",
+        bearer_subaccount: splitSubaccounts[0].subaccount,
+        subaccounts: splitSubaccounts, 
+      },
+    };
 
-    // Initialize payments for each seller
-    const paymentPromises = Object.keys(sellerPayments).map(async (sellerId) => {
-      const seller = await User.findById(sellerId).select("subAccountId");
-      if (!seller || !seller.subAccountId) {
-        throw new Error(`Seller with ID ${sellerId} does not have a valid subaccount.`);
-      }
-
-      const paystackUrl = "https://api.paystack.co/transaction/initialize";
-      const paymentData = {
-        email: user.email,
-        amount: sellerPayments[sellerId].amount * 100, // Convert to kobo
-        callback_url: `${process.env.CLIENT_URL}/payment/verify`,
-        metadata: {
-          orderId: createdOrder._id.toString(), // Include the order ID
-          sellerPayments,
-        },
-        subaccount: seller.subAccountId,
-        transaction_charge: 0,
-        bearer: "subaccount",
-      };
-
-      console.log("Initializing payment with data:", paymentData);
-
-      const paymentResponse = await axios.post(
-        paystackUrl,
-        paymentData,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      return {
-        sellerId,
-        reference: paymentResponse.data.data.reference,
-        authorization_url: paymentResponse.data.data.authorization_url,
-      };
+    // Send payment request to Paystack
+    const paymentResponse = await axios.post(paystackUrl, paymentData, {
+      headers: {
+        Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+        "Content-Type": "application/json",
+      },
     });
 
-    const paymentResults = await Promise.all(paymentPromises);
 
     res.status(200).json({
       message: "Payment initiated successfully",
-      paymentResults,
+      authorization_url: paymentResponse.data.data.authorization_url,
+      reference: paymentResponse.data.data.reference,
     });
   } catch (error) {
     console.error("Payment initiation error:", error);
     res.status(500).json({
       message: "Failed to initiate payment",
-      error: error.message,
+      error: error.response?.data || error.message,
     });
   }
 };
 
 
-//     const paymentResponses = await Promise.all(paymentPromises);
-
-//     return res.status(200).json({
-//       message: "Payment initialized successfully",
-//       data: paymentResponses,
-//     });
-//   } catch (error) {
-//     console.error("Error initializing payment:", error.message);
-//     res.status(500).json({ message: "Failed to initialize payment", error: error.message });
-//   }
-// };
-
-
+// Verify Payment
 export const verifyPayment = async (req, res) => {
   const { reference } = req.params;
 
@@ -206,7 +182,7 @@ export const verifyPayment = async (req, res) => {
       `https://api.paystack.co/transaction/verify/${reference}`,
       {
         headers: {
-          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
           "Content-Type": "application/json",
         },
       }
@@ -215,46 +191,28 @@ export const verifyPayment = async (req, res) => {
     const { status, data } = response.data;
 
     if (status && data.status === "success") {
-      console.log("Metadata received from Paystack:", data.metadata);
-
       const orderId = data.metadata?.orderId;
+
       if (!orderId) {
         return res.status(400).json({ message: "Order ID missing in metadata" });
       }
-      const order = await Order.findOneAndUpdate(
-        { _id: data.metadata.orderId },
-        { paymentStatus: "Successful", totalAmount: data.amount / 100 },
+
+      const order = await Order.findByIdAndUpdate(
+        orderId,
+        { paymentStatus: "Successful" },
         { new: true }
       );
 
-      if (!order) {
-        return res.status(404).json({ message: "Order not found" });
-      }
-
-      // Reduce stock quantity for each product in the order
-      const orderedProducts = data.metadata.sellerPayments;
-      for (const sellerId in orderedProducts) {
-        orderedProducts[sellerId].products.forEach(async (product) => {
-          await Product.updateOne(
-            { _id: product._id },
-            { $inc: { stock: -product.quantity } }
-          );
-        });
-      }
-
-
       return res.status(200).json({
-        message: "Payment verified successfully and stock updated",
+        message: "Payment verified successfully and order updated",
         order,
       });
     } else {
-      return res
-        .status(400)
-        .json({ message: "Payment verification failed", data });
+      return res.status(400).json({ message: "Payment verification failed", data });
     }
   } catch (error) {
-    console.error("Error verifying payment:", error.message);
-    res.status(500).json({ message: "Server Error" });
+    console.error("Error verifying payment:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 

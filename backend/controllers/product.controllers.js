@@ -42,39 +42,39 @@ export const getAllProductsForAdmin = async (req, res) => {
 
 export const createProduct = async (req, res) => {
   try {
-    const { name, description, price, category, stock, image } = req.body;
+    const { name, description, price, category, stock } = req.body;
 
     if (!name || !description || !price || !category || !stock) {
       throw new Error("All fields are required");
     }
 
-    // let cloudinaryResponse = null;
+    let cloudinaryResponse = null;
 
-    // Check if the image file is uploaded
-    // if (req.file) {
-    //   cloudinaryResponse = await new Promise((resolve, reject) => {
-    //     const uploadStream = cloudinary.uploader.upload_stream(
-    //       { folder: "products" },
-    //       (error, result) => {
-    //         if (error) return reject(error);
-    //         resolve(result);
-    //       }
-    //     );
-    //     uploadStream.end(req.file.buffer);
-    //   });
-    // }
+  
+    if (req.file) {
+      cloudinaryResponse = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          { folder: "products" },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          }
+        );
+        uploadStream.end(req.file.buffer);
+      });
+    }
 
     const newProduct = new Product({
       name,
       description,
       price,
-      image,
+      image: cloudinaryResponse?.secure_url ? cloudinaryResponse.secure_url : "",
       category,
       userId: req.user._id,
       stock: stock,
     });
 
-    // : cloudinaryResponse?.secure_url ? cloudinaryResponse.secure_url : "",
+    
 
 
     const savedProduct = await newProduct.save();
