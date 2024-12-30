@@ -51,7 +51,7 @@ const userSchema = new mongoose.Schema(
       enum: ["active", "inactive", null],
       default: null,
     },
-    subAccountId: { type: Number },
+    subAccountId: { type: String},
   },
   {
     timestamps: true,

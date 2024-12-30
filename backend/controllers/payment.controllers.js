@@ -15,10 +15,14 @@ export const createSubaccount = async (req, res) => {
   try {
     const { accountNumber, bankName, currency, name } = req.body;
 
+    // Validate required fields
     if (!accountNumber || !bankName) {
-      res.status(400).json({ message: "Please fill in the require field" });
+      return res.status(400).json({ message: "Please fill in the required fields" });
     }
 
+    console.log("Request body:", req.body); // Log the request body
+
+    // Create subaccount via Paystack API
     const response = await paystack.subaccount.create({
       business_name: name,
       email: req.user.email,
@@ -28,15 +32,27 @@ export const createSubaccount = async (req, res) => {
       account_number: accountNumber,
     });
 
-    req.user.subAccountId = response.data.id;
-    await req.user.save();
+  
 
+    // Save subaccount code to user
+    req.user.subAccountId = response.data.subaccount_code; 
+    await req.user.save(); 
+
+    // Return the response
     res.status(201).json(response.data);
   } catch (error) {
     console.error("Error creating sub-account:", error);
+
+    // Handle validation error specifically
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: "Validation failed", errors: error.errors });
+    }
+
+    // General server error
     res.status(500).json({ message: "Server Error" });
   }
 };
+
 
 export const initiatePayment = async (req, res) => {
   try {
@@ -119,19 +135,25 @@ export const initiatePayment = async (req, res) => {
         throw new Error(`Seller with ID ${sellerId} does not have a valid subaccount.`);
       }
 
-      const paymentResponse = await axios.post(
-        "https://api.paystack.co/transaction/initialize",
-        {
-          email: user.email,
-          amount: sellerPayments[sellerId].amount * 100, // Convert to kobo
-          callback_url: `${process.env.CLIENT_URL}/payment/verify`,
-          metadata: {
-            orderId: createdOrder._id.toString(), // Include the order ID
-            sellerPayments,
-          },
-          // subaccount: seller.subAccountId,
-          transaction_charge: 0,
+      const paystackUrl = "https://api.paystack.co/transaction/initialize";
+      const paymentData = {
+        email: user.email,
+        amount: sellerPayments[sellerId].amount * 100, // Convert to kobo
+        callback_url: `${process.env.CLIENT_URL}/payment/verify`,
+        metadata: {
+          orderId: createdOrder._id.toString(), // Include the order ID
+          sellerPayments,
         },
+        subaccount: seller.subAccountId,
+        transaction_charge: 0,
+        bearer: "subaccount",
+      };
+
+      console.log("Initializing payment with data:", paymentData);
+
+      const paymentResponse = await axios.post(
+        paystackUrl,
+        paymentData,
         {
           headers: {
             Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
@@ -147,17 +169,33 @@ export const initiatePayment = async (req, res) => {
       };
     });
 
-    const paymentResponses = await Promise.all(paymentPromises);
+    const paymentResults = await Promise.all(paymentPromises);
 
-    return res.status(200).json({
-      message: "Payment initialized successfully",
-      data: paymentResponses,
+    res.status(200).json({
+      message: "Payment initiated successfully",
+      paymentResults,
     });
   } catch (error) {
-    console.error("Error initializing payment:", error.message);
-    res.status(500).json({ message: "Failed to initialize payment", error: error.message });
+    console.error("Payment initiation error:", error);
+    res.status(500).json({
+      message: "Failed to initiate payment",
+      error: error.message,
+    });
   }
 };
+
+
+//     const paymentResponses = await Promise.all(paymentPromises);
+
+//     return res.status(200).json({
+//       message: "Payment initialized successfully",
+//       data: paymentResponses,
+//     });
+//   } catch (error) {
+//     console.error("Error initializing payment:", error.message);
+//     res.status(500).json({ message: "Failed to initialize payment", error: error.message });
+//   }
+// };
 
 
 export const verifyPayment = async (req, res) => {
