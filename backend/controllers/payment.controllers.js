@@ -149,6 +149,8 @@ export const initiatePayment = async (req, res) => {
       },
     };
 
+    console.log("Payment Data:", JSON.stringify(paymentData, null, 2));
+
     // Send payment request to Paystack
     const paymentResponse = await axios.post(paystackUrl, paymentData, {
       headers: {
@@ -157,6 +159,7 @@ export const initiatePayment = async (req, res) => {
       },
     });
 
+    console.log("Paystack Response:", paymentResponse.data);
 
     res.status(200).json({
       message: "Payment initiated successfully",
