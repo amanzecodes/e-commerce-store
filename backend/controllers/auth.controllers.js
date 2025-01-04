@@ -1,5 +1,7 @@
-  import User from "../models/user.model.js";
-  import jwt from "jsonwebtoken";
+import User from "../models/user.model.js";
+import jwt from "jsonwebtoken";
+import dotenv from 'dotenv'
+dotenv.config()
 
   const generateTokens = (userId) => {
     const accessToken = jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
@@ -60,6 +62,7 @@
     }
   };
 
+
   export const login = async (req, res) => {
     try {
       const { email, password } = req.body;
@@ -85,7 +88,7 @@
     }
   };
 
-  export const logout = async (req, res) => {
+export const logout = async (req, res) => {
     try {
       const refreshToken = req.cookies.refreshToken;
       if (refreshToken) {
@@ -104,8 +107,8 @@
     }
   };
 
-  //This will recreate an accessTOKEN
-  export const refreshToken = async (req, res) => {
+//This will recreate an accessTOKEN
+export const refreshToken = async (req, res) => {
     try {
       const refreshToken = req.cookies.refreshToken;
 
@@ -115,9 +118,6 @@
 
       const decode = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
 
-      if (storedToken !== refreshToken) {
-        return res.status(401).json({ message: "Invalid refresh token" });
-      }
 
       const accessToken = jwt.sign(
         { userId: decode.userId },
