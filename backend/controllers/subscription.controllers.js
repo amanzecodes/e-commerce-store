@@ -5,20 +5,19 @@ dotenv.config();
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 
-export const initiateSubscriptionPayment = async (req, res) => {
+export const subscribeUser = async (req, res) => {
   const { planCode } = req.params;
-  const { email, amount } = req.body;
+  const { amount } = req.body;
 
   const userId = req.user._id;
 
   try {
-    // Convert amount to kobo (Paystack uses kobo for currency)
     const amountInKobo = amount * 100;
 
     const response = await axios.post(
       "https://api.paystack.co/transaction/initialize",
       {
-        email,
+        email: userId.email,
         amount: amountInKobo,
         metadata: {
           userId,
@@ -99,4 +98,5 @@ export const verifyPaymentAndSubscribeUser = async (req, res) => {
       res.status(500).json({ error: "Failed to verify payment or subscribe user" });
     }
   };
-  
+
+

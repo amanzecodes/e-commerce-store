@@ -15,6 +15,7 @@ import inventoryRoute from "./routes/inventory.route.js";
 import wishlistRoute from "./routes/wishlist.route.js";
 import subscriptionRoutes from "./routes/subscription.route.js";
 import notificationRoute from "./routes/notifications.route.js";
+import reviewRoute from './routes/reviews.route.js'
 const app = express();
 app.use(cors());
 dotenv.config();
@@ -36,6 +37,7 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/wishlist", wishlistRoute);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/notification", notificationRoute);
+app.use("/api/reviews", reviewRoute);
 
 app.listen(PORT, () => {
   console.log("Server is running on http://localhost:" + PORT);
